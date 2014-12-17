@@ -1,8 +1,5 @@
 import java.net.InetAddress;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -14,10 +11,20 @@ public class AddressCacheImpl implements AddressCache {
     protected final int ttl;
     protected Map<InetAddress, Long> timeInfo = Collections.synchronizedMap(new WeakHashMap<>());
     protected LinkedBlockingDeque<InetAddress> deque = new LinkedBlockingDeque<>();
+    protected final Timer cleaner = new Timer(true);
 
     public AddressCacheImpl(int ttl) {
         this.ttl = ttl;
-        //todo auto cleanup
+    }
+
+    {
+        cleaner.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                cleanup();
+            }
+
+        }, CLEANUP_INTERVAL);
     }
 
     @Override
@@ -54,9 +61,9 @@ public class AddressCacheImpl implements AddressCache {
 
     @Override
     public void close() {
-        deque.clear();
-        timeInfo.clear();
-        //todo
+        deque = null;
+        timeInfo = null;
+        cleaner.cancel();
     }
 
     @Override

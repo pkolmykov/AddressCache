@@ -3,6 +3,7 @@ import org.junit.Test;
 import java.net.InetAddress;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -42,5 +43,16 @@ public class AddressCacheImplTest {
         assertEquals(1, addressCache.timeInfo.size());
         assertTrue("Time should be updated when offering existing address",
                 addressCache.timeInfo.get(address) >= currentTimeMillis + interval);
+    }
+
+    @Test
+    public void testCleaner() throws Exception {
+        int ttl = 1000;
+        AddressCacheImpl addressCache = new AddressCacheImpl(ttl);
+        addressCache.offer(mock(InetAddress.class));
+        addressCache.offer(mock(InetAddress.class));
+        assertEquals(2, addressCache.size());
+        Thread.sleep(AddressCacheImpl.CLEANUP_INTERVAL + 100);
+        assertEquals(0, addressCache.size());
     }
 }
