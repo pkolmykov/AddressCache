@@ -3,9 +3,7 @@ import org.junit.Test;
 
 import java.net.InetAddress;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 public class AddressCacheImplTest {
@@ -65,5 +63,18 @@ public class AddressCacheImplTest {
         assertFalse(addressCache.isEmpty());
         addressCache.close();
         addressCache.isEmpty();//should throw IllegalStateException
+    }
+
+    @Test
+    public void testTakeRemovePeek() throws Exception {
+        InetAddress first = mock(InetAddress.class);
+        InetAddress second = mock(InetAddress.class);
+        AddressCacheImpl addressCache = new AddressCacheImpl(1000);
+        addressCache.offer(first);
+        addressCache.offer(second);
+        assertEquals(second, addressCache.peek());
+        assertEquals(second, addressCache.take());
+        assertEquals(first, addressCache.remove());
+        assertNull(addressCache.peek());
     }
 }
