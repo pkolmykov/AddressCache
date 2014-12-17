@@ -12,6 +12,7 @@ public class AddressCacheImpl implements AddressCache {
     protected Map<InetAddress, Long> timeInfo = Collections.synchronizedMap(new WeakHashMap<>());
     protected LinkedBlockingDeque<InetAddress> deque = new LinkedBlockingDeque<>();
     protected final Timer cleaner = new Timer(true);
+    private boolean closed;
 
     public AddressCacheImpl(int ttl) {
         this.ttl = ttl;
@@ -29,6 +30,7 @@ public class AddressCacheImpl implements AddressCache {
 
     @Override
     public boolean offer(InetAddress address) {
+        ensureOpen();
         timeInfo.put(address, System.currentTimeMillis());
         deque.remove(address);
         return deque.offer(address);
@@ -36,26 +38,31 @@ public class AddressCacheImpl implements AddressCache {
 
     @Override
     public boolean contains(InetAddress address) {
+        ensureOpen();
         return deque.contains(address);
     }
 
     @Override
     public boolean remove(InetAddress address) {
+        ensureOpen();
         return deque.remove(address);
     }
 
     @Override
     public InetAddress peek() {
+        ensureOpen();
         return deque.peekLast();
     }
 
     @Override
     public InetAddress remove() {
+        ensureOpen();
         return deque.pollLast();
     }
 
     @Override
     public InetAddress take() throws InterruptedException {
+        ensureOpen();
         return deque.takeLast();
     }
 
@@ -64,15 +71,24 @@ public class AddressCacheImpl implements AddressCache {
         deque = null;
         timeInfo = null;
         cleaner.cancel();
+        closed = true;
     }
+
+    private void ensureOpen() {
+        if (closed)
+            throw new IllegalStateException("AddressCache closed");
+    }
+
 
     @Override
     public int size() {
+        ensureOpen();
         return deque.size();
     }
 
     @Override
     public boolean isEmpty() {
+        ensureOpen();
         return deque.isEmpty();
     }
 

@@ -1,3 +1,4 @@
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.InetAddress;
@@ -46,6 +47,7 @@ public class AddressCacheImplTest {
     }
 
     @Test
+    @Ignore//will take more then 5 secs
     public void testCleaner() throws Exception {
         int ttl = 1000;
         AddressCacheImpl addressCache = new AddressCacheImpl(ttl);
@@ -54,5 +56,14 @@ public class AddressCacheImplTest {
         assertEquals(2, addressCache.size());
         Thread.sleep(AddressCacheImpl.CLEANUP_INTERVAL + 100);
         assertEquals(0, addressCache.size());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testClose() throws Exception {
+        AddressCacheImpl addressCache = new AddressCacheImpl(1000);
+        addressCache.offer(mock(InetAddress.class));
+        assertFalse(addressCache.isEmpty());
+        addressCache.close();
+        addressCache.isEmpty();//should throw IllegalStateException
     }
 }
